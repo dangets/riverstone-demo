@@ -1,0 +1,8 @@
+get names & birthdays
+
+plot histogram across months
+plot histogram across day of month
+plot histogram across day of week
+
+search google for celebrities/athletes bday on same day
+say who's birthday is next

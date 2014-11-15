@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Riverstone Demo</title>
+</head>
+
+<body>
+    <form>
+        <label for="inputName">Name:</label><input type="text" id="inputName"><br/>
+        <label for="inputBday">Birthday:</label><input type="date" id="inputBday"><br/>
+        <label for="inputGender">Gender:</label><input type="text" id="inputGender"><br/>
+        <button type="button" onClick="riverstone.addStudentFromForm(); riverstone.redraw()">Add</button>
+    </form>
+
+    <div id="vis">
+    </div>
+
+    <div id="histogram">
+    </div>
+
+    <script type="text/javascript" src="./d3.min.js"></script>
+    <script type="text/javascript" src="./riverstone.js"></script>
+</body>
+
+</html>
