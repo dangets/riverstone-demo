@@ -79,27 +79,22 @@ var riverstone = (function() {
     var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
       "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-    var studentsByMonth = d3.nest()
-      .key(function(d) { return d.bday.getMonth(); })
-      .entries(students);
-
+    var groupFn = function(d) { return d.bday.getMonth(); };
     var xRange = d3.range(0, monthNames.length);
     var xValues = monthNames;
 
-    my.redrawHistogram(studentsByMonth, xRange, xValues);
+    my.redrawHistogram(groupFn, xRange, xValues);
   };
 
   histByDayOfWeek = function() {
     var daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-    var data = d3.nest()
-      .key(function(d) { return d.bday.getDay(); })
-      .entries(students);
-
+    var groupFn = function(d) { return d.bday.getDay(); };
     var xRange = d3.range(0, daysOfWeek.length);
     var xValues = daysOfWeek;
 
-    my.redrawHistogram(data, xRange, xValues);
+    //my.redrawHistogram(groupFn, xRange, xValues);
+    my.redrawHistogram2(groupFn, xRange, xValues);
   };
 
 
@@ -147,11 +142,14 @@ var riverstone = (function() {
     .html(function (d) { return d.toString(); });
   };
 
-  my.redrawHistogram = function(data, xRange, xValues) {
-    var mostEntriesInGroup = d3.max(data, function(d) { return d.values.length; });
+  my.redrawHistogram = function(groupFn, xRange, xValues) {
+    var data = d3.nest()
+      .key(groupFn)
+      .entries(students);
 
-    //console.debug(data);
-    //console.debug(mostEntriesInGroup);
+    var mostEntriesInGroup = d3.max(data, function(d) { return d.values.length; });
+    if (mostEntriesInGroup == 0)
+      mostEntriesInGroup = 1;
 
     var scaleX = d3.scale.ordinal()
       .domain(xRange)
@@ -182,7 +180,7 @@ var riverstone = (function() {
       .append("rect")
       .attr("fill", "steelblue")
       .attr("x", function(d) { return scaleX(d.key); })
-      .attr("y", function(d) { return scaleY(d.values.length); })
+      .attr("y", mainHeight)
       .attr("width", scaleX.rangeBand())
       .attr("height", 0);
 
@@ -192,7 +190,106 @@ var riverstone = (function() {
 
     bars.exit()
       .transition()
+      .attr("y", mainHeight)
+      .attr("height", 0)
+      .remove();
+  };
+
+  my.redrawHistogram2 = function(groupFn, xRange, xValues) {
+    var data1 = d3.nest()
+      .key(groupFn)
+      .entries(students);
+
+    var genderGroupFn = function(d) { return d.gender; };
+    var data2 = d3.nest()
+      .key(groupFn)
+      .key(genderGroupFn)
+      .entries(students);
+
+    var mostEntriesInGroup = d3.max(data1, function(d) { return d.values.length; });
+    if (mostEntriesInGroup === undefined)
+      mostEntriesInGroup = 1;
+
+    var scaleX = d3.scale.ordinal()
+      .domain(xRange)
+      .rangeRoundBands([0, mainWidth], 0.1);
+
+    var scaleX2 = d3.scale.ordinal()
+      .domain(["M", "F"])
+      .rangeRoundBands([0, scaleX.rangeBand()], 0.1);
+
+    var scaleY = d3.scale.linear()
+      .domain([0, mostEntriesInGroup])
+      .rangeRound([mainHeight, 0]);
+
+    var xAxis = d3.svg.axis()
+      .scale(scaleX)
+      .orient("bottom")
+      .tickFormat(function(d) { return xValues[d]; });
+
+    var yAxis = d3.svg.axis()
+      .scale(scaleY)
+      .orient("left")
+      .tickFormat(d3.format(".0f"))
+      .tickValues(d3.range(0, mostEntriesInGroup+1));
+
+    histXAxisG.call(xAxis);
+    histYAxisG.call(yAxis);
+
+    var bars = histMain.selectAll(".group1Rect")
+      .data(data1, function(d) { return d.key; });
+
+    bars.enter()
+      .append("rect")
+      .attr("class", "group1Rect")
+      .attr("fill", "steelblue")
+      .attr("x", function(d) { return scaleX(d.key); })
+      .attr("y", mainHeight)
+      .attr("width", scaleX.rangeBand())
+      .attr("height", 0);
+
+    bars.transition()
       .attr("y", function(d) { return scaleY(d.values.length); })
+      .attr("height", function(d) { return mainHeight - scaleY(d.values.length); });
+
+    bars.exit()
+      .transition()
+      .attr("y", mainHeight)
+      .attr("height", 0)
+      .remove();
+
+    var bars2 = histMain.selectAll(".group2Rect")
+      .data(data2, function(d) { return d.key; });
+
+    bars2.enter()
+      .append("g")
+      .attr("class", "group2Rect")
+      .attr("transform", function(d) { return "translate(" + scaleX(d.key) + ", 0)"; });
+
+    bars2.exit()
+      .remove();
+
+    var bars2Bars = bars2.selectAll("rect")
+      .data(function(d) { return d.values; }, function(d) { return d.key; });
+
+    bars2Bars.enter()
+      .append("rect")
+      .attr("fill", function(d) { return d.key == "M" ? "#edf8b1" : "#7fcdbb"; })
+      .attr("stroke-width", 1.5)
+      .attr("stroke", "black")
+      .attr("x", function(d) { return scaleX2(d.key); })
+      .attr("width", scaleX2.rangeBand())
+      .attr("y", mainHeight)
+      .attr("height", 0);
+
+    bars2Bars.transition()
+      .attr("y", function(d) { return scaleY(d.values.length); })
+      .attr("height", function(d) { return mainHeight - scaleY(d.values.length); });
+
+    bars2Bars.exit()
+      .transition()
+      .attr("stroke-width", 0)
+      .attr("y", mainHeight)
       .attr("height", 0)
       .remove();
   };
@@ -200,5 +297,5 @@ var riverstone = (function() {
   return my;
 })();
 
-riverstone.populateWithRandomData(25);
+riverstone.populateWithRandomData(5);
 riverstone.redraw();
