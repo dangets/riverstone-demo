@@ -3,21 +3,50 @@
 
 <head>
     <title>Riverstone Demo</title>
+    <style type="text/css" media="screen">
+        .center {
+            margin-left: auto;
+            margin-right: auto;
+            display: block;
+        }
+    </style>
 </head>
 
 <body>
     <form>
+        <label for="inputCount">Count:</label><input type="number" id="inputCount">
+        <button type="button" onClick="riverstone.redrawWithCount();">Go</button>
+        <br/>
+    <!--
         <label for="inputName">Name:</label><input type="text" id="inputName"><br/>
         <label for="inputBday">Birthday:</label><input type="date" id="inputBday"><br/>
         <label for="inputGender">Gender:</label><input type="text" id="inputGender"><br/>
+    -->
         <button type="button" onClick="riverstone.addStudentFromForm(); riverstone.redraw()">Add</button>
         <button type="button" onClick="riverstone.removeStudent(); riverstone.redraw()">Remove</button>
     </form>
 
-    <div id="vis">
+    <br />
+
+    <p>
+    <button type="button" onClick="riverstone.switchToByMonth()">By Month</button>
+    <button type="button" onClick="riverstone.switchToByDayOfWeek()">By Day of Week</button>
+    <br />
+    <input type="checkbox" id="byGender">By Gender
+    </p>
+
+    <br />
+
+    <div id="histogram" class="center">
     </div>
 
-    <div id="histogram">
+    <br />
+
+    <p>
+    <button type="button" onClick="riverstone.showData()">Show data</button>
+    </p>
+
+    <div id="vis">
     </div>
 
     <script type="text/javascript" src="./d3.min.js"></script>

@@ -52,6 +52,7 @@ var riverstone = (function() {
 
   var histogram = d3.select("#histogram")
     .append("svg")
+    .attr("class", "center")
     .attr("width", svgWidth)
     .attr("height", svgHeight)
     .append("g")
@@ -75,7 +76,7 @@ var riverstone = (function() {
     .attr("height", mainHeight)
     .attr("transform", "translate(" + yAxisWidth + ", 0)");
 
-  histByMonth = function() {
+  histByMonth = function(byGender) {
     var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
       "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -83,22 +84,67 @@ var riverstone = (function() {
     var xRange = d3.range(0, monthNames.length);
     var xValues = monthNames;
 
-    my.redrawHistogram(groupFn, xRange, xValues);
+    if (byGender) {
+      my.redrawHistogram2(groupFn, xRange, xValues);
+    } else {
+      my.redrawHistogram(groupFn, xRange, xValues);
+    }
   };
 
-  histByDayOfWeek = function() {
+  histByDayOfWeek = function(byGender) {
     var daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
     var groupFn = function(d) { return d.bday.getDay(); };
     var xRange = d3.range(0, daysOfWeek.length);
     var xValues = daysOfWeek;
 
-    //my.redrawHistogram(groupFn, xRange, xValues);
-    my.redrawHistogram2(groupFn, xRange, xValues);
+    if (byGender) {
+      my.redrawHistogram2(groupFn, xRange, xValues);
+    } else {
+      my.redrawHistogram(groupFn, xRange, xValues);
+    }
   };
 
+  clear = function() {
+    histMain.selectAll("*").remove();
+  };
+
+  var mode = "byMonth";
 
   // PUBLIC FUNCTIONS -----------------------------------
+  my.redrawWithCount = function() {
+    var count = document.getElementById("inputCount").value;
+
+    clear();
+    students = [];
+    this.populateWithRandomData(count);
+    this.redraw();
+  };
+
+  my.switchToByMonth = function() {
+    clear();
+    mode = "byMonth";
+    this.redraw();
+  };
+
+  my.switchToByDayOfWeek = function() {
+    clear();
+    mode = "byDayOfWeek";
+    this.redraw();
+  };
+
+  my.redraw = function() {
+    byGender = document.getElementById("byGender").checked;
+    if (mode === "byMonth") {
+      histByMonth(byGender);
+    } else {
+      histByDayOfWeek(byGender);
+    }
+  }
+
+  my.showData = function() {
+    this.redrawList();
+  };
 
   my.addStudent = function(name, bday, gender) {
     students.push(new Student(name, bday, gender));
@@ -124,12 +170,6 @@ var riverstone = (function() {
       students.push(getRandomStudent());
       i++;
     }
-  };
-
-  my.redraw = function() {
-    //this.redrawList();
-    //histByMonth();
-    histByDayOfWeek();
   };
 
   my.redrawList = function() {
@@ -167,8 +207,10 @@ var riverstone = (function() {
     var yAxis = d3.svg.axis()
       .scale(scaleY)
       .orient("left")
-      .tickFormat(d3.format(".0f"))
-      .tickValues(d3.range(0, mostEntriesInGroup+1));
+      .tickFormat(d3.format(".0f"));
+    if (mostEntriesInGroup < 10) {
+      yAxis.tickValues(d3.range(0, mostEntriesInGroup+1));
+    }
 
     histXAxisG.call(xAxis);
     histYAxisG.call(yAxis);
@@ -230,8 +272,10 @@ var riverstone = (function() {
     var yAxis = d3.svg.axis()
       .scale(scaleY)
       .orient("left")
-      .tickFormat(d3.format(".0f"))
-      .tickValues(d3.range(0, mostEntriesInGroup+1));
+      .tickFormat(d3.format(".0f"));
+    if (mostEntriesInGroup < 10) {
+      yAxis.tickValues(d3.range(0, mostEntriesInGroup+1));
+    }
 
     histXAxisG.call(xAxis);
     histYAxisG.call(yAxis);
@@ -274,7 +318,7 @@ var riverstone = (function() {
 
     bars2Bars.enter()
       .append("rect")
-      .attr("fill", function(d) { return d.key == "M" ? "#edf8b1" : "#7fcdbb"; })
+      .attr("fill", function(d) { return d.key === "M" ? "#edf8b1" : "#7fcdbb"; })
       .attr("stroke-width", 1.5)
       .attr("stroke", "black")
       .attr("x", function(d) { return scaleX2(d.key); })
@@ -297,5 +341,3 @@ var riverstone = (function() {
   return my;
 })();
 
-riverstone.populateWithRandomData(5);
-riverstone.redraw();
